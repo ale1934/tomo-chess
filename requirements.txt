@@ -2,5 +2,7 @@ Django>=5.0
 channels>=4.1
 daphne>=4.1
 python-chess>=1.10
-# Optional, for multi-process / production deployments:
-# channels-redis>=4.2
+whitenoise>=6.6
+dj-database-url>=2.1
+psycopg[binary]>=3.1
+channels-redis>=4.2   # only used when REDIS_URL is set
