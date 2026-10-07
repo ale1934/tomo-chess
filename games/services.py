@@ -223,6 +223,7 @@ def _move(game, seat, msg):
         game.save()
     return serialize(game), None
 
+@transaction.atomic
 def request_rematch(code, token):
     game = Game.objects.select_for_update().get(code=code)
 
