@@ -20,6 +20,7 @@ class Friendship(models.Model):
     to_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="requests_received")
     status = models.CharField(max_length=10, default=PENDING)
     created = models.DateTimeField(auto_now_add=True)
+    
 
     class Meta:
         unique_together = [("from_user", "to_user")]
@@ -58,6 +59,9 @@ class Game(models.Model):
     result = models.CharField(max_length=8, blank=True)  # 1-0, 0-1, 1/2-1/2, *
     reason = models.CharField(max_length=60, blank=True)
     draw_offer = models.CharField(max_length=1, blank=True)  # "w" / "b" / ""
+
+    rematch_white = models.BooleanField(default=False)
+    rematch_black = models.BooleanField(default=False)
 
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

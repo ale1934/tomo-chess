@@ -6,8 +6,15 @@ from django.utils import timezone
 
 from .models import Game
 
-ACTIONS = {"move", "resign", "abort", "draw_offer", "draw_accept", "draw_decline", "flag"}
-
+ACTIONS = {
+    "move",
+    "resign",
+    "abort",
+    "draw_offer",
+    "draw_accept",
+    "draw_decline",
+    "flag",
+}
 
 # ---------- identity ----------
 def token_for(user, session):
@@ -79,6 +86,8 @@ def serialize(game):
         "result": game.result,
         "reason": game.reason,
         "draw_offer": game.draw_offer,
+        "rematch_white": game.rematch_white,
+        "rematch_black": game.rematch_black,
     }
 
 
@@ -213,3 +222,46 @@ def _move(game, seat, msg):
     else:
         game.save()
     return serialize(game), None
+
+def request_rematch(code, token):
+    game = Game.objects.select_for_update().get(code=code)
+
+    if game.status != Game.FINISHED:
+        return None, "The game isn't finished."
+
+    seat = seat_of(game, token)
+
+    if seat == "spectator":
+        return None, "You are not a player in this game."
+
+    if seat == "white":
+        game.rematch_white = True
+    else:
+        game.rematch_black = True
+
+    if game.rematch_white and game.rematch_black:
+        new_game = Game.objects.create(
+            status=Game.ACTIVE,
+            white_token=game.black_token,
+            white_name=game.black_name,
+            black_token=game.white_token,
+            black_name=game.white_name,
+            initial_seconds=game.initial_seconds,
+            increment_seconds=game.increment_seconds,
+            white_ms=game.initial_seconds * 1000,
+            black_ms=game.initial_seconds * 1000,
+            last_move_at=timezone.now(),
+        )
+
+        return {
+            "type": "rematch_created",
+            "code": new_game.code,
+        }, None
+
+    game.save()
+
+    return {
+        "type": "rematch_requested",
+        "white": game.rematch_white,
+        "black": game.rematch_black,
+    }, None

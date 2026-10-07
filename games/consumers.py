@@ -43,6 +43,25 @@ class GameConsumer(AsyncJsonWebsocketConsumer):
                 await self.send_json({"type": "error", "message": error})
             elif state:
                 await self.channel_layer.group_send(self.group, {"type": "broadcast", "payload": state})
+        elif kind == "rematch":
+            result, error = await db(services.request_rematch)(
+                self.code,
+                self.token,
+            )
+
+            if error:
+                await self.send_json({
+                    "type": "error",
+                    "message": error,
+                })
+            elif result:
+                await self.channel_layer.group_send(
+                    self.group,
+                    {
+                        "type": "broadcast",
+                        "payload": result,
+                    },
+                )
 
     async def broadcast(self, event):
         await self.send_json(event["payload"])

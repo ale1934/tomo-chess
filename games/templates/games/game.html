@@ -28,8 +28,17 @@
         <button id="b-draw" class="small" hidden>Offer draw</button>
         <button id="b-resign" class="small" hidden>Resign</button>
         <button id="b-abort" class="small" hidden>Abort</button>
-        <a id="b-home" class="btn small primary" href="{% url 'home' %}" hidden>Back to lobby</a>
+
+        <button id="b-rematch" class="small primary" hidden>
+          Rematch
+        </button>
+
+        <a id="b-home" class="btn small" href="{% url 'home' %}" hidden>
+          Back to lobby
+        </a>
       </div>
+
+      <div id="rematch-status" class="muted"></div>
       <label class="pieces-pick">Piece style
         <select id="piece-set">
           <option value="cburnett">Classic</option>
