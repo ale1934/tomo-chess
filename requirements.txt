@@ -1,0 +1,6 @@
+Django>=5.0
+channels>=4.1
+daphne>=4.1
+python-chess>=1.10
+# Optional, for multi-process / production deployments:
+# channels-redis>=4.2

@@ -1,0 +1,57 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% block title %}Game {{ game.code }} - Rookery{% endblock %}
+{% block content %}
+<div class="game-wrap">
+  <section class="board-col">
+    <div class="player" id="p-top"><span class="dot"></span><span class="pname" id="name-top"></span><span class="clock" id="clock-top">--:--</span></div>
+    <div class="board-wrap">
+      <div id="board" class="board" aria-label="Chess board"></div>
+      <div id="promo" class="promo" hidden></div>
+    </div>
+    <div class="player" id="p-bot"><span class="dot"></span><span class="pname" id="name-bot"></span><span class="clock" id="clock-bot">--:--</span></div>
+  </section>
+
+  <aside class="side">
+    <section class="card" id="lobby" hidden>
+      <h3>Waiting for an opponent</h3>
+      <p class="muted">Share this code, or send the link. Anyone who opens it takes the open seat.</p>
+      <div class="code" id="lobby-code">{{ game.code }}</div>
+      <button id="copy-link" class="small">Copy invite link</button>
+    </section>
+
+    <section class="card">
+      <div id="status" class="status">Connecting…</div>
+      <div id="flash" class="flash"></div>
+      <div id="drawbar"></div>
+      <div class="btns">
+        <button id="b-draw" class="small" hidden>Offer draw</button>
+        <button id="b-resign" class="small" hidden>Resign</button>
+        <button id="b-abort" class="small" hidden>Abort</button>
+        <a id="b-home" class="btn small primary" href="{% url 'home' %}" hidden>Back to lobby</a>
+      </div>
+      <label class="pieces-pick">Piece style
+        <select id="piece-set">
+          <option value="cburnett">Classic</option>
+          <option value="merida">Merida</option>
+          <option value="chessnut">Chessnut</option>
+          <option value="glyph">Plain symbols</option>
+        </select>
+      </label>
+      <p class="muted meta">{{ game.time_label }} · code {{ game.code }}</p>
+    </section>
+
+    <section class="card moves" id="moves"><span class="muted">Moves will appear here.</span></section>
+
+    <section class="card chat">
+      <div id="chat-log" class="chat-log"></div>
+      <form id="chat-form" class="join" autocomplete="off">
+        <input id="chat-input" placeholder="Say something nice" maxlength="300">
+        <button class="small">Send</button>
+      </form>
+    </section>
+  </aside>
+</div>
+{{ cfg|json_script:"cfg" }}
+{% endblock %}
+{% block scripts %}<script src="{% static 'games/game.js' %}"></script>{% endblock %}

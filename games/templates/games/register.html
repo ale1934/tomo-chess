@@ -1,0 +1,12 @@
+{% extends "games/base.html" %} {% block title %}Create account - Baka Chess{% endblock %} {% block content %}
+<div class="narrow card">
+    <h2>Create your account</h2>
+    <form method="post" class="stack">
+        {% csrf_token %} {{ form.non_field_errors }} <label>Username {{ form.username }}</label>{{ form.username.errors
+        }} <label>Password {{ form.password1 }}</label>{{ form.password1.errors }}
+        <label>Confirm password {{ form.password2 }}</label>{{ form.password2.errors }}
+        <button class="primary">Create account</button>
+    </form>
+    <p class="muted">Already registered? <a href="{% url 'login' %}">Sign in</a></p>
+</div>
+{% endblock %}

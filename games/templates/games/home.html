@@ -1,0 +1,183 @@
+{% extends "games/base.html" %} {% block content %} {% if not user.is_authenticated %}
+<section class="hero">
+    <div>
+        <h1>True Tomo Chess</h1>
+        <p>Make an account or play as guest i dont gaf.</p>
+    </div>
+    <div class="board-art" aria-hidden="true"><span>♞</span></div>
+</section>
+<div class="grid3">
+    <section class="card">
+        <h2>Join with a code</h2>
+        <form class="join" method="post" action="{% url 'join_code' %}">
+            {% csrf_token %}
+            <input name="code" placeholder="Lobby code" maxlength="8" autocomplete="off" required />
+            <button class="primary">Join game</button>
+        </form>
+        <p class="muted">You'll play as a guest. Create an account to keep your games and add friends.</p>
+    </section>
+    <section class="card">
+        <h2>Create an account</h2>
+        <form method="post" action="{% url 'register' %}" class="stack">
+            {% csrf_token %}
+            <input name="username" placeholder="Username" required />
+            <input name="password1" type="password" placeholder="Password" required />
+            <input name="password2" type="password" placeholder="Confirm password" required />
+            <button class="primary">Sign up</button>
+        </form>
+    </section>
+    <section class="card">
+        <h2>Sign in</h2>
+        <form method="post" action="{% url 'login' %}" class="stack">
+            {% csrf_token %}
+            <input name="username" placeholder="Username" required />
+            <input name="password" type="password" placeholder="Password" required />
+            <button>Sign in</button>
+        </form>
+    </section>
+</div>
+
+{% else %}
+<div class="grid2">
+    <div class="col">
+        <section class="card" id="new-game">
+            <h2>New game</h2>
+            <form method="post" action="{% url 'create_game' %}" class="stack">
+                {% csrf_token %}
+                <div class="chips">
+                    {% for p in presets %}
+                    <label class="chip"
+                        ><input
+                            type="radio"
+                            name="preset"
+                            value="{{ p.value }}"
+                            {%
+                            if
+                            p.default
+                            %}checked{%
+                            endif
+                            %}
+                        /><span><b>{{ p.label }}</b><small>{{ p.name }}</small></span></label
+                    >
+                    {% endfor %}
+                    <label class="chip"
+                        ><input type="radio" name="preset" value="custom" /><span
+                            ><b>Custom</b><small>your own</small></span
+                        ></label
+                    >
+                </div>
+                <div class="custom">
+                    <label>Minutes <input type="number" name="custom_minutes" value="10" min="1" max="180" /></label>
+                    <label
+                        >Increment (s) <input type="number" name="custom_increment" value="0" min="0" max="60"
+                    /></label>
+                </div>
+                <div class="row">
+                    <label
+                        >Play as
+                        <select name="color">
+                            <option value="random">Random</option>
+                            <option value="white">White</option>
+                            <option value="black">Black</option>
+                        </select>
+                    </label>
+                    <label
+                        >Opponent
+                        <select name="invite" id="invite">
+                            <option value="">Anyone with the code</option>
+                            {% for f in friends %}
+                            <option value="{{ f.user.username }}">Invite {{ f.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                </div>
+                <button class="primary">Create game</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Join with a code</h2>
+            <form class="join" method="post" action="{% url 'join_code' %}">
+                {% csrf_token %}
+                <input name="code" placeholder="Lobby code" maxlength="8" autocomplete="off" required />
+                <button>Join game</button>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Your games</h2>
+            {% for g in games %}
+            <a class="game-row" href="{% url 'game' g.code %}">
+                <b>{{ g.code }}</b><span>vs {{ g.opp }}</span><span class="muted">{{ g.time_label }}</span>
+                <span class="tag {{ g.status }}"
+                    >{% if g.status == 'finished' %}{{ g.result|default:"-" }}{% else %}{{ g.status }}{% endif %}</span
+                >
+            </a>
+            {% empty %}
+            <p class="muted">No games yet. Create one above and share the code.</p>
+            {% endfor %}
+        </section>
+    </div>
+
+    <div class="col">
+        <section class="card">
+            <h2>Friends</h2>
+            <form method="post" action="{% url 'friend_add' %}" class="join">
+                {% csrf_token %}
+                <input name="username" placeholder="Add by username" required />
+                <button>Send request</button>
+            </form>
+
+            {% if incoming %}
+            <h3>Requests for you</h3>
+            {% for r in incoming %}
+            <div class="friend-row">
+                <span>{{ r.from_user.username }}</span>
+                <form method="post" action="{% url 'friend_action' r.pk 'accept' %}">
+                    {% csrf_token %}<button class="small primary">Accept</button>
+                </form>
+                <form method="post" action="{% url 'friend_action' r.pk 'decline' %}">
+                    {% csrf_token %}<button class="small">Decline</button>
+                </form>
+            </div>
+            {% endfor %} {% endif %} {% if outgoing %}
+            <h3>Sent</h3>
+            {% for r in outgoing %}
+            <div class="friend-row">
+                <span>{{ r.to_user.username }} <small class="muted">pending</small></span>
+                <form method="post" action="{% url 'friend_action' r.pk 'cancel' %}">
+                    {% csrf_token %}<button class="small">Cancel</button>
+                </form>
+            </div>
+            {% endfor %} {% endif %}
+
+            <h3>Your friends</h3>
+            {% for f in friends %}
+            <div class="friend-row">
+                <span>{{ f.user.username }}</span>
+                <button type="button" class="small primary" data-challenge="{{ f.user.username }}">Challenge</button>
+                <form
+                    method="post"
+                    action="{% url 'friend_action' f.pk 'remove' %}"
+                    onsubmit="return confirm('Remove {{ f.user.username|escapejs }}?')"
+                >
+                    {% csrf_token %}<button class="small">Remove</button>
+                </form>
+            </div>
+            {% empty %}
+            <p class="muted">No friends yet. Send a request using a username.</p>
+            {% endfor %}
+        </section>
+    </div>
+</div>
+{% endif %} {% endblock %} {% block scripts %}
+<script>
+    document.querySelectorAll("[data-challenge]").forEach(b =>
+        b.addEventListener("click", () => {
+            document.getElementById("invite").value = b.dataset.challenge;
+            document.getElementById("new-game").scrollIntoView({ behavior: "smooth" });
+            document.querySelector("#new-game .primary").focus();
+        }),
+    );
+</script>
+{% endblock %}
